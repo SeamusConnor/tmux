@@ -39,8 +39,8 @@ const struct cmd_entry cmd_new_session_entry = {
 	.name = "new-session",
 	.alias = "new",
 
-	.args = { "Ac:dDEF:n:Ps:t:x:y:", 0, -1 },
-	.usage = "[-AdDEP] [-c start-directory] [-F format] [-n window-name] "
+	.args = { "ANc:dDEF:n:Ps:t:x:y:", 0, -1 },
+	.usage = "[-ANdDEP] [-c start-directory] [-F format] [-n window-name] "
 		 "[-s session-name] " CMD_TARGET_SESSION_USAGE " [-x width] "
 		 "[-y height] [command]",
 
@@ -94,6 +94,16 @@ cmd_new_session_exec(struct cmd *self, struct cmd_q *cmdq)
 		return (CMD_RETURN_ERROR);
 	}
 
+    if (args_has(args, 'N')) {
+        as = session_find_attached(0);
+        if (as != NULL) {
+            cmd_find_from_session(&cmdq->state.tflag, as);
+            return (cmd_attach_session(cmdq,
+                args_has(args, 'D'), 0, NULL,
+                args_has(args, 'E')));
+        }
+    }
+
 	newname = args_get(args, 's');
 	if (newname != NULL) {
 		if (!session_check_name(newname)) {
@@ -125,6 +135,14 @@ cmd_new_session_exec(struct cmd *self, struct cmd_q *cmdq)
 		}
 	} else
 		groupwith = NULL;
+
+    if (args_has(args, 'N')) {
+        as = session_find_attached(1);
+        if (as != NULL) {
+            cmd_find_from_session(&cmdq->state.tflag, as);
+            groupwith = cmdq->state.tflag.s;
+        }
+    }
 
 	/* Set -d if no client. */
 	detached = args_has(args, 'd');

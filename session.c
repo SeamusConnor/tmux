@@ -100,6 +100,18 @@ session_find_by_id(u_int id)
 	return (NULL);
 }
 
+/* Find arbitrary unattached session */
+struct session *
+session_find_attached(u_int attached) {
+    struct session *s;
+	RB_FOREACH(s, sessions, &sessions) {
+		if ((attached && s->attached) || (!attached && !s->attached))
+			return (s);
+	}
+
+    return (NULL);
+}
+
 /* Create a new session. */
 struct session *
 session_create(const char *name, int argc, char **argv, const char *path,
