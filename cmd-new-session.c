@@ -70,6 +70,7 @@ cmd_new_session_exec(struct cmd *self, struct cmd_q *cmdq)
 	struct client		*c = cmdq->client;
 	struct session		*s, *as;
 	struct session		*groupwith = cmdq->state.tflag.s;
+    struct session_group *asg;
 	struct window		*w;
 	struct environ		*env;
 	struct termios		 tio, *tiop;
@@ -94,8 +95,22 @@ cmd_new_session_exec(struct cmd *self, struct cmd_q *cmdq)
 		return (CMD_RETURN_ERROR);
 	}
 
+	if ((target = args_get(args, 't')) != NULL) {
+		if (groupwith == NULL) {
+			cmdq_error(cmdq, "no such session: %s", target);
+			goto error;
+		}
+	} else
+		groupwith = NULL;
+
+    if (args_has(args, 'N') && groupwith == NULL) {
+		cmdq_error(cmdq, "target required for -N option");
+		return (CMD_RETURN_ERROR);
+    }
+
     if (args_has(args, 'N')) {
-        as = session_find_attached(0);
+        as = session_find_detached(groupswith, 0);
+
         if (as != NULL) {
             cmd_find_from_session(&cmdq->state.tflag, as);
             return (cmd_attach_session(cmdq,
@@ -127,22 +142,6 @@ cmd_new_session_exec(struct cmd *self, struct cmd_q *cmdq)
 			return (CMD_RETURN_ERROR);
 		}
 	}
-
-	if ((target = args_get(args, 't')) != NULL) {
-		if (groupwith == NULL) {
-			cmdq_error(cmdq, "no such session: %s", target);
-			goto error;
-		}
-	} else
-		groupwith = NULL;
-
-    if (args_has(args, 'N')) {
-        as = session_find_attached(1);
-        if (as != NULL) {
-            cmd_find_from_session(&cmdq->state.tflag, as);
-            groupwith = cmdq->state.tflag.s;
-        }
-    }
 
 	/* Set -d if no client. */
 	detached = args_has(args, 'd');

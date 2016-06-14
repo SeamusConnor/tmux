@@ -100,13 +100,30 @@ session_find_by_id(u_int id)
 	return (NULL);
 }
 
-/* Find arbitrary unattached session */
+/* Find session based on session group and attached state */
 struct session *
-session_find_attached(u_int attached) {
+session_find_detached(struct session_group *sg) {
+    int idx,targetidx = -1;
     struct session *s;
+    struct session_group *sg2;
+
+    if (sg != NULL)
+        targetidx = session_group_index(sg);
+
 	RB_FOREACH(s, sessions, &sessions) {
-		if ((attached && s->attached) || (!attached && !s->attached))
-			return (s);
+		if (!s->attached) {
+            if (sg != NULL) {
+                sg2 = session_group_find(s);
+                if (sg2 != NULL) {
+                    idx = session_group_index(sg2);
+                    if (idx == targetidx) {
+                        return (s);
+                    }
+                }
+            } else (sg == NULL) {
+                return (s);
+            }
+        }
 	}
 
     return (NULL);

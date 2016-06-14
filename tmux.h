@@ -2286,7 +2286,7 @@ int		 session_alive(struct session *);
 struct session	*session_find(const char *);
 struct session	*session_find_by_id_str(const char *);
 struct session	*session_find_by_id(u_int);
-struct session	*session_find_attached(u_int attached);
+struct session	*session_find_detached(struct session_group *sg);
 struct session	*session_create(const char *, int, char **, const char *,
 		     const char *, struct environ *, struct termios *, int,
 		     u_int, u_int, char **);
